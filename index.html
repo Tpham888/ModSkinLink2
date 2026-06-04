@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nc Tool - Free Fire Support App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <style>
+        /* --- RESET & BASE STYLE --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: #0b0c10;
+            color: #c5c6c7;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            background-color: #11141a;
+            min-height: 100vh;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            border-left: 1px solid #1f2833;
+            border-right: 1px solid #1f2833;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- LOADING SCREEN (Mặc định ẩn, chỉ hiện khi có JS) --- */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            background-color: #0b0c10;
+            z-index: 9999;
+            display: none; /* MẶC ĐỊNH ẨN: Đề phòng lỗi JS gây trắng màn */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .loading-title {
+            color: #46307e; 
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px rgba(70, 48, 126, 0.3);
+        }
+
+        .loading-subtitle {
+            color: #66fcf1;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 40px;
+            opacity: 0.8;
+        }
+
+        .progress-container {
+            width: 80%;
+            background-color: #1f2833;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #45f3ff22;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #46307e, #66fcf1);
+            box-shadow: 0 0 10px #66fcf1;
+            border-radius: 6px;
+            transition: width 0.1s ease-out;
+        }
+
+        .progress-text {
+            margin-top: 15px;
+            font-size: 16px;
+            color: #66fcf1;
+            font-weight: bold;
+        }
+
+        /* --- MAIN CONTENT (Mặc định luôn hiện) --- */
+        #main-content {
+            display: block; /* SỬA THEO CHATGPT: Luôn hiện để chống lỗi */
+            opacity: 1;
+            flex: 1;
+        }
+
+        .header {
+            padding: 30px 20px;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(31,40,51,0.5) 0%, rgba(17,20,26,0) 100%);
+            border-bottom: 1px solid rgba(102, 252, 241, 0.1);
+        }
+
+        .brand-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 1px;
+            line-height: 1.2;
+        }
+
+        .brand-title span {
+            color: #66fcf1; 
+            text-shadow: 0 0 4px #66fcf1, 0 0 12px #66fcf1;
+        }
+
+        .brand-desc {
+            font-size: 14px;
+            color: #8b949e;
+            margin-top: 15px;
+            line-height: 1.6;
+            padding: 0 10px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 25px 20px;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        @media (hover: hover) {
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+            }
+        }
+
+        .btn:active {
+            transform: scale(0.98) translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #66fcf1, #45f3ff);
+            color: #0b0c10;
+        }
+
+        .btn-secondary {
+            background-color: #1f2833;
+            color: #66fcf1;
+            border: 1px solid rgba(102, 252, 241, 0.3);
+        }
+
+        .download-section {
+            margin: 10px 20px 30px 20px;
+            background-color: #1a1e24;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(102, 252, 241, 0.15);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .download-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #ff2a00, #ff7a00, #ffea00, #ff2a00, #ff7a00);
+            background-size: 300% 100%;
+            will-change: background-position;
+            animation: fireFlow 3s linear infinite;
+            box-shadow: 0 -4px 15px #ff5500, 0 -10px 30px rgba(255,68,0,0.5);
+        }
+
+        .fire-glow-bg {
+            position: absolute;
+            bottom: -10px;
+            left: -50%;
+            width: 200%;
+            height: 40px;
+            background: radial-gradient(circle, rgba(255,68,0,0.15) 0%, rgba(255,0,0,0) 70%);
+            filter: blur(8px);
+            animation: firePulse 2s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes fireFlow {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 300% 0%; }
+        }
+
+        @keyframes firePulse {
+            0% { transform: scaleY(0.8) translateY(2px); opacity: 0.6; }
+            100% { transform: scaleY(1.2) translateY(-2px); opacity: 1; }
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-sub {
+            font-size: 13px;
+            color: #8b949e;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .disclaimer-box {
+            background-color: rgba(255, 120, 120, 0.05);
+            border-left: 3px solid #ff5555;
+            padding: 10px 12px;
+            font-size: 12px;
+            color: #e57373;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .divider {
+            height: 1px;
+            background-color: rgba(255,255,255,0.08);
+            margin: 20px 0;
+        }
+
+        .app-meta-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #66fcf1;
+            margin-bottom: 15px;
+        }
+
+        .meta-list {
+            list-style: none;
+            font-size: 14px;
+            color: #c5c6c7;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .meta-list li {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed rgba(255,255,255,0.05);
+            padding-bottom: 8px;
+        }
+
+        .meta-list li span:first-child {
+            color: #8b949e;
+        }
+
+        .btn-download-action {
+            background: linear-gradient(90deg, #ff4500, #ff7a00);
+            color: white;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 17px;
+            padding: 16px;
+            box-shadow: 0 4px 15px rgba(255, 69, 0, 0.3);
+            will-change: transform;
+            animation: pulse 2.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        /* --- POPUP / MODAL --- */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 20px;
+        }
+
+        .popup-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup-content {
+            background-color: #1a1e24;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 20px;
+            border: 1px solid #ff5500;
+            padding: 24px;
+            position: relative;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(255, 85, 0, 0.15);
+        }
+
+        .popup-overlay.active .popup-content {
+            transform: translateY(0);
+        }
+
+        .popup-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: #8b949e;
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .popup-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding-bottom: 10px;
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 25px;
+        }
+
+        .task-item {
+            background-color: #11141a;
+            border: 1px solid #1f2833;
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .task-info {
+            font-size: 14px;
+            color: #c5c6c7;
+            line-height: 1.4;
+        }
+
+        .task-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #1f2833;
+            color: #ff7a00;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 122, 0, 0.2);
+            align-self: flex-start;
+            word-break: break-all;
+            max-width: 100%;
+        }
+
+        .btn-unlock {
+            width: 100%;
+            padding: 15px;
+            font-weight: bold;
+            font-size: 16px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .btn-unlock.locked {
+            background-color: #0b0c10;
+            color: #ff7a00;
+            border: 1px solid #1f2833;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn-unlock.unlocked {
+            background: linear-gradient(90deg, #ff4500, #ff7a00);
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(255, 69, 0, 0.4);
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 11px;
+            color: #4f5b66;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+
+        <div id="loading-screen" aria-hidden="true">
+            <div class="loading-title">Share Mod</div>
+            <div class="loading-subtitle">Link Từ Discord Mod Skin VN</div>
+            <div class="progress-container">
+                <div class="progress-bar" id="id-progress-bar"></div>
+            </div>
+            <div class="progress-text" id="id-progress-text">0%</div>
+        </div>
+
+        <div id="main-content">
+            
+            <header class="header">
+                <h1 class="brand-title">Nc Tool<br><span>Free Fire</span></h1>
+                <p class="brand-desc">
+                    Công cụ hỗ trợ <strong>[Mod Skin]</strong> mạnh nhất hiện tại. Nguồn App từ kênh Ncua VN. Các tính năng được tối ưu cho trải nghiệm sử dụng.
+                </p>
+            </header>
+
+            <main>
+                <div class="btn-group">
+                    <a href="#download-target" class="btn btn-primary">Tải Ngay 👇</a>
+                    <a href="https://discord.gg/TMeFZquD6" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Link Discord</a>
+                </div>
+
+                <section class="download-section" id="download-target">
+                    <div class="fire-glow-bg"></div>
+
+                    <h2 class="section-title">Nc Tool</h2>
+                    <p class="section-sub">Tải Nc Tool chỉ cần vượt 1 link.</p>
+                    
+                    <div class="disclaimer-box">
+                        Trang web được tạo không cổ xúy cho cờ bạc, bạo lực hoặc nội dung phản cảm.
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <h3 class="app-meta-title">Nc Tool <strong>[Version 1.7]</strong></h3>
+                    <p style="font-size: 13px; color: #8b949e; margin-top: -10px; margin-bottom: 15px;">
+                        By Ncua VN Free Fire Support App
+                    </p>
+
+                    <ul class="meta-list">
+                        <li>
+                            <span>Tính năng:</span>
+                            <strong>🎮 Mod Skin dành cho Android</strong>
+                        </li>
+                        <li>
+                            <span>Dung lượng:</span>
+                            <span>~25 MB</span>
+                        </li>
+                        <li>
+                            <span>Yêu cầu:</span>
+                            <span>Android 5+</span>
+                        </li>
+                        <li>
+                            <span>Cập nhật:</span>
+                            <span>04/06/2026</span>
+                        </li>
+                    </ul>
+
+                    <button class="btn btn-download-action" id="trigger-popup-btn"><strong>[TẢI NGAY!]</strong></button>
+                </section>
+            </main>
+
+            <footer>
+                &copy; 2026 Ncua VN. All rights reserved.
+            </footer>
+        </div>
+
+    </div>
+
+    <div class="popup-overlay" id="popup-overlay" role="dialog" aria-modal="true">
+        <div class="popup-content">
+            <button class="popup-close" id="popup-close-btn" aria-label="Đóng popup">&times;</button>
+            <h3 class="popup-title">Mở khóa link</h3>
+            
+            <div class="task-list">
+                <div class="task-item">
+                    <div class="task-info">1. Tham gia Discord Mod Skin VN</div>
+                    <a href="https://discord.gg/TMeFZquD6" target="_blank" rel="noopener noreferrer" class="task-link">Link Discord 🚀</a>
+                </div>
+                <div class="task-item">
+                    <div class="task-info">2. Follow TikTok</div>
+                    <a href="https://www.tiktok.com/@kc2w22?_r=1&_t=ZS-96vgNjk7SFw" target="_blank" rel="noopener noreferrer" class="task-link">Follow TikTok 🎵</a>
+                </div>
+            </div>
+
+            <a href="#" id="final-link-btn" class="btn-unlock locked">Vui lòng chờ 10 giây...</a>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const loadingScreen = document.getElementById("loading-screen");
+            const progressBar = document.getElementById("id-progress-bar");
+            const progressText = document.getElementById("id-progress-text");
+
+            // KIỂM TRA AN TOÀN: Chỉ kích hoạt màn hình loading nếu JS chạy bình thường
+            if (loadingScreen && progressBar && progressText) {
+                loadingScreen.style.display = "flex"; // Kích hoạt hiện loading bằng JS
+
+                let currentProgress = 0;
+                const fakePreload = setInterval(() => {
+                    if (currentProgress < 90) {
+                        currentProgress += Math.floor(Math.random() * 8) + 4;
+                        if(currentProgress > 90) currentProgress = 90;
+                        progressBar.style.width = `${currentProgress}%`;
+                        progressText.innerText = `${currentProgress}%`;
+                    }
+                }, 30);
+
+                function finishLoading() {
+                    clearInterval(fakePreload);
+                    progressBar.style.width = "100%";
+                    progressText.innerText = "100%";
+                    
+                    setTimeout(() => {
+                        // Sửa theo ChatGPT: Dùng style.display = 'none' an toàn tuyệt đối
+                        if (loadingScreen) {
+                            loadingScreen.style.opacity = "0";
+                            loadingScreen.style.visibility = "hidden";
+                            setTimeout(() => { loadingScreen.style.display = "none"; }, 300);
+                        }
+                    }, 100);
+                }
+
+                if (document.readyState === "loading") {
+                    document.addEventListener("DOMContentLoaded", finishLoading);
+                } else {
+                    finishLoading();
+                }
+            }
+
+            // Logic Popup & localStorage
+            const triggerPopupBtn = document.getElementById("trigger-popup-btn");
+            const popupOverlay = document.getElementById("popup-overlay");
+            const popupCloseBtn = document.getElementById("popup-close-btn");
+            const finalLinkBtn = document.getElementById("final-link-btn");
+
+            let countdownTimer;
+            const STORAGE_KEY = "nc_tool_link_unlocked";
+            const TARGET_URL = "https://nhapma.com/v/NCTOOL";
+
+            function setLinkUnlockedState() {
+                if (finalLinkBtn) {
+                    finalLinkBtn.className = "btn-unlock unlocked";
+                    finalLinkBtn.innerText = "MỞ LINK NGAY";
+                    finalLinkBtn.href = TARGET_URL;
+                    finalLinkBtn.setAttribute("target", "_blank");
+                    finalLinkBtn.setAttribute("rel", "noopener noreferrer");
+                }
+            }
+
+            if (triggerPopupBtn && popupOverlay && finalLinkBtn) {
+                triggerPopupBtn.addEventListener("click", function() {
+                    popupOverlay.classList.add("active");
+
+                    if (localStorage.getItem(STORAGE_KEY) === "true") {
+                        setLinkUnlockedState();
+                        return;
+                    }
+
+                    let timeLeft = 10;
+                    finalLinkBtn.className = "btn-unlock locked";
+                    finalLinkBtn.innerText = `Vui lòng chờ ${timeLeft} giây...`;
+                    finalLinkBtn.href = "#";
+                    finalLinkBtn.removeAttribute("target");
+                    finalLinkBtn.removeAttribute("rel");
+
+                    clearInterval(countdownTimer);
+                    countdownTimer = setInterval(() => {
+                        timeLeft--;
+                        if (timeLeft > 0) {
+                            finalLinkBtn.innerText = `Vui lòng chờ ${timeLeft} giây...`;
+                        } else {
+                            clearInterval(countdownTimer);
+                            setLinkUnlockedState();
+                            localStorage.setItem(STORAGE_KEY, "true");
+                        }
+                    }, 1000);
+                });
+            }
+
+            if (popupCloseBtn && popupOverlay) {
+                popupCloseBtn.addEventListener("click", function() {
+                    popupOverlay.classList.remove("active");
+                    clearInterval(countdownTimer);
+                });
+
+                popupOverlay.addEventListener("click", function(e) {
+                    if (e.target === popupOverlay) {
+                        popupOverlay.classList.remove("active");
+                        clearInterval(countdownTimer);
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
