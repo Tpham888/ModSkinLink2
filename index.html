@@ -99,6 +99,33 @@
             }
         }
 
+        /* ===== BANNER ===== */
+        .banner-container {
+            margin: 0 16px 16px 16px;
+            border-radius: 24px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .banner-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+        }
+
+        .banner-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 100%);
+            pointer-events: none;
+        }
+
         /* ===== APP HEADER ===== */
         .app-header {
             display: flex;
@@ -387,6 +414,69 @@
         .btn-confirm:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+
+        /* ===== USER VERIFICATION STATUS ===== */
+        .user-status-box {
+            margin: 0 16px 16px 16px;
+            padding: 14px 18px;
+            border-radius: 16px;
+            background: #14141e;
+            border: 0.5px solid rgba(255, 215, 0, 0.06);
+            display: none;
+            align-items: center;
+            gap: 14px;
+            animation: cardSlideUp 0.3s ease-out;
+        }
+
+        .user-status-box.show {
+            display: flex;
+        }
+
+        .user-status-box .avatar-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #2a2a34;
+        }
+
+        .user-status-box .avatar-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-status-box .user-info {
+            flex: 1;
+        }
+
+        .user-status-box .user-info .uname {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .user-status-box .user-info .uid {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .user-status-box .status-badge {
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .user-status-box .status-badge.success {
+            background: rgba(76, 175, 80, 0.15);
+            color: #4caf50;
+        }
+
+        .user-status-box .status-badge.error {
+            background: rgba(229, 57, 53, 0.15);
+            color: #e53935;
         }
 
         /* ===== LOADING ===== */
@@ -1008,6 +1098,82 @@
             margin-top: 2px;
         }
 
+        /* ===== ZALOPAY CARD ===== */
+        .zalo-pay-card {
+            background: linear-gradient(145deg, #1a1a2e, #0f0f1a);
+            border-radius: 20px;
+            padding: 18px 20px;
+            margin: 12px 0 16px 0;
+            border: 0.5px solid rgba(255, 215, 0, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: 0.3s;
+        }
+
+        .zalo-pay-card:hover {
+            border-color: rgba(0, 170, 255, 0.2);
+        }
+
+        .zalo-pay-card .zalo-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+        }
+
+        .zalo-pay-card .zalo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .zalo-pay-card .zalo-info {
+            flex: 1;
+        }
+
+        .zalo-pay-card .zalo-info .zalo-name {
+            font-weight: 700;
+            font-size: 17px;
+            color: #fff;
+        }
+
+        .zalo-pay-card .zalo-info .zalo-number {
+            font-size: 14px;
+            color: #00aaff;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .zalo-pay-card .zalo-info .zalo-desc {
+            font-size: 12px;
+            color: #888;
+            margin-top: 1px;
+        }
+
+        .zalo-pay-card .btn-zalo-pay {
+            background: linear-gradient(135deg, #0066ff, #00aaff);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        .zalo-pay-card .btn-zalo-pay:active {
+            transform: scale(0.95);
+        }
+
         /* ===== CONFETTI ===== */
         .confetti-container {
             position: fixed;
@@ -1042,6 +1208,8 @@
             .id-section .id-input-wrap { flex-wrap: wrap; }
             .modal-box { padding: 20px 16px; }
             .cart-icon { width: 52px; height: 52px; font-size: 24px; bottom: 20px; right: 16px; }
+            .zalo-pay-card { flex-wrap: wrap; }
+            .zalo-pay-card .btn-zalo-pay { width: 100%; text-align: center; }
         }
     </style>
 </head>
@@ -1068,6 +1236,11 @@
             <span class="version-badge">V4.0</span>
         </div>
     </header>
+
+    <!-- ===== BANNER ===== -->
+    <div class="banner-container">
+        <img src="images.jpeg" alt="OG SHOP Banner">
+    </div>
 
     <!-- ===== TICKER (MARQUEE) ===== -->
     <div class="ticker">
@@ -1110,6 +1283,18 @@
             <input type="text" id="usernameInput" placeholder="Nhập username Roblox...">
             <button class="btn-confirm" id="confirmBtn" onclick="confirmUser()">Xác nhận</button>
         </div>
+    </div>
+
+    <!-- ===== USER VERIFICATION STATUS ===== -->
+    <div class="user-status-box" id="userStatusBox">
+        <div class="avatar-thumb" id="statusAvatar">
+            <img id="statusAvatarImg" src="" alt="Avatar">
+        </div>
+        <div class="user-info">
+            <div class="uname" id="statusUsername">Username</div>
+            <div class="uid" id="statusUserId">ID: 123456789</div>
+        </div>
+        <div class="status-badge" id="statusBadge">✅ Đã xác nhận</div>
     </div>
 
     <!-- ===== LOADING BAR ===== -->
@@ -1238,6 +1423,7 @@
         let cart = [];
         let currentUser = null;
         let isVerified = false;
+        let verifiedUserData = null;
 
         // ============================================================
         // 3. INIT
@@ -1334,11 +1520,22 @@
 
                 const info = await detail.json();
 
+                // Get avatar
+                const avatarRes = await fetch(
+                    `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${user.id}&size=150x150&format=Png`
+                );
+                const avatarData = await avatarRes.json();
+                let avatarUrl = null;
+                if (avatarData.data && avatarData.data.length > 0) {
+                    avatarUrl = avatarData.data[0].imageUrl;
+                }
+
                 return {
                     username: info.name,
                     displayName: info.displayName,
                     id: info.id,
-                    created: info.created
+                    created: info.created,
+                    avatar: avatarUrl
                 };
             } catch (error) {
                 console.error('Roblox API error:', error);
@@ -1353,13 +1550,39 @@
                     const data = JSON.parse(saved);
                     currentUser = data;
                     isVerified = true;
+                    verifiedUserData = data;
                     showUserCard(data);
+                    showUserStatus(data, true);
                 } catch (e) {}
             }
         }
 
         function saveUser(user) {
             localStorage.setItem('ogshop_user', JSON.stringify(user));
+        }
+
+        function showUserStatus(user, success) {
+            const box = document.getElementById('userStatusBox');
+            box.classList.add('show');
+
+            const avatarImg = document.getElementById('statusAvatarImg');
+            if (user.avatar) {
+                avatarImg.src = user.avatar;
+            } else {
+                avatarImg.src = '';
+            }
+
+            document.getElementById('statusUsername').textContent = user.displayName || user.username;
+            document.getElementById('statusUserId').textContent = 'ID: ' + user.id;
+
+            const badge = document.getElementById('statusBadge');
+            if (success) {
+                badge.className = 'status-badge success';
+                badge.textContent = '✅ Tìm thấy tài khoản';
+            } else {
+                badge.className = 'status-badge error';
+                badge.textContent = '❌ Không tìm thấy tài khoản';
+            }
         }
 
         async function confirmUser() {
@@ -1396,6 +1619,11 @@
                 loadFill.style.width = '100%';
                 loadText.textContent = '❌ Không tìm thấy Roblox User!';
                 showToast('❌ Không tìm thấy Roblox User!', 'error');
+                // Show error status
+                const fakeUser = { username: name, displayName: name, id: 'Không tìm thấy' };
+                showUserStatus(fakeUser, false);
+                isVerified = false;
+                verifiedUserData = null;
                 setTimeout(() => {
                     loadingBar.classList.remove('show');
                     btn.disabled = false;
@@ -1407,6 +1635,7 @@
             loadText.textContent = '✅ Hoàn tất!';
 
             currentUser = userData;
+            verifiedUserData = userData;
             saveUser(userData);
             isVerified = true;
 
@@ -1414,6 +1643,7 @@
                 loadingBar.classList.remove('show');
                 btn.disabled = false;
                 showUserCard(userData);
+                showUserStatus(userData, true);
                 showToast('✅ Đã xác nhận: ' + userData.displayName, 'success');
                 updateCartUI();
             }, 400);
@@ -1424,23 +1654,31 @@
             card.classList.add('show');
 
             const avatar = document.getElementById('userAvatar');
-            const img = document.createElement('img');
-            img.src = `https://www.roblox.com/headshot-thumbnail/image?userId=${user.id}&width=100&height=100&format=png`;
-            img.onerror = () => {
+            if (user.avatar) {
+                const img = document.createElement('img');
+                img.src = user.avatar;
+                img.onerror = () => {
+                    avatar.textContent = user.displayName.charAt(0).toUpperCase();
+                    avatar.style.background = 'linear-gradient(135deg, #ffb700, #f57c00)';
+                    avatar.style.display = 'flex';
+                    avatar.style.alignItems = 'center';
+                    avatar.style.justifyContent = 'center';
+                };
+                img.onload = () => {
+                    avatar.innerHTML = '';
+                    avatar.appendChild(img);
+                    avatar.style.background = 'none';
+                    avatar.style.display = 'block';
+                };
+                avatar.innerHTML = '';
+                avatar.appendChild(img);
+            } else {
                 avatar.textContent = user.displayName.charAt(0).toUpperCase();
                 avatar.style.background = 'linear-gradient(135deg, #ffb700, #f57c00)';
                 avatar.style.display = 'flex';
                 avatar.style.alignItems = 'center';
                 avatar.style.justifyContent = 'center';
-            };
-            img.onload = () => {
-                avatar.innerHTML = '';
-                avatar.appendChild(img);
-                avatar.style.background = 'none';
-                avatar.style.display = 'block';
-            };
-            avatar.innerHTML = '';
-            avatar.appendChild(img);
+            }
 
             document.getElementById('userNameDisplay').textContent = user.displayName || user.username;
             document.getElementById('userIdDisplay').textContent = 'ID: ' + user.id;
@@ -1476,7 +1714,7 @@
         // 9. CART
         // ============================================================
         function addToCart(productId) {
-            if (!isVerified) {
+            if (!isVerified || !verifiedUserData) {
                 showToast('⚠️ Vui lòng xác nhận Roblox ID trước!', 'error');
                 return;
             }
@@ -1510,7 +1748,7 @@
 
             const checkoutBtn = document.getElementById('checkoutBtn');
             if (checkoutBtn) {
-                checkoutBtn.disabled = total === 0;
+                checkoutBtn.disabled = total === 0 || !isVerified;
             }
         }
 
@@ -1579,7 +1817,7 @@
         // 10. CHECKOUT
         // ============================================================
         function checkout() {
-            if (!isVerified) {
+            if (!isVerified || !verifiedUserData) {
                 showToast('⚠️ Vui lòng xác nhận Roblox ID trước!', 'error');
                 return;
             }
@@ -1623,7 +1861,21 @@
                                 <span>Tổng tiền: <span style="color:#ffb700;">${formatPrice(total)}</span></span>
                             </div>
                         </div>
-                        <button class="btn-checkout" onclick="renderPaymentStep(2)">Tiếp tục →</button>
+
+                        <!-- ZaloPay Card -->
+                        <div class="zalo-pay-card">
+                            <div class="zalo-icon">
+                                <img src="images.png" alt="ZaloPay">
+                            </div>
+                            <div class="zalo-info">
+                                <div class="zalo-name">ZaloPay</div>
+                                <div class="zalo-number">Số nhận: 0981******</div>
+                                <div class="zalo-desc">Thanh toán qua ZaloPay nhanh chóng</div>
+                            </div>
+                            <button class="btn-zalo-pay" onclick="processZaloPay()">Thanh toán</button>
+                        </div>
+
+                        <button class="btn-checkout" onclick="renderPaymentStep(2)" style="margin-top:6px;">Tiếp tục →</button>
                     </div>
                 `;
             } else if (step === 2) {
@@ -1775,7 +2027,57 @@
         });
 
         // ============================================================
-        // 12. PROCESS PAYMENT
+        // 12. ZALOPAY PAYMENT
+        // ============================================================
+        function processZaloPay() {
+            if (!isVerified || !verifiedUserData) {
+                showToast('⚠️ Vui lòng xác nhận Roblox ID trước!', 'error');
+                return;
+            }
+            if (cart.length === 0) {
+                showToast('⚠️ Giỏ hàng trống!', 'error');
+                return;
+            }
+
+            const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+            const totalRobux = cart.reduce((sum, item) => sum + parseInt(item.name) * item.qty, 0);
+
+            closeModal('paymentModal');
+
+            // Show processing
+            showToast('⏳ Đang xử lý thanh toán ZaloPay...', '');
+
+            setTimeout(() => {
+                fireConfetti();
+                showToast('✅ Thanh toán ZaloPay thành công!', 'success');
+                // Clear cart
+                cart = [];
+                updateCartUI();
+
+                // Show success message in payment modal
+                const modal = document.getElementById('paymentModal');
+                modal.classList.add('active');
+                const container = document.getElementById('paymentContent');
+                container.innerHTML = `
+                    <div class="payment-step active">
+                        <div style="text-align:center;padding:20px 0;">
+                            <div style="font-size:64px;">✅</div>
+                            <div class="step-title" style="color:#4caf50;font-size:20px;">Thanh toán ZaloPay thành công!</div>
+                            <div class="step-desc" style="margin-top:12px;">
+                                <p>Bạn đã mua <strong style="color:#ffb700;">${totalRobux} Robux</strong></p>
+                                <p>Thanh toán: <strong style="color:#ffb700;">${formatPrice(total)}</strong></p>
+                                <p style="font-size:12px;color:#666;margin-top:8px;">Mã giao dịch: #${Math.floor(100000 + Math.random()*900000)}</p>
+                                <p style="font-size:12px;color:#00aaff;margin-top:4px;">💳 Thanh toán qua ZaloPay</p>
+                            </div>
+                            <button class="btn-checkout" onclick="closeModal('paymentModal');" style="margin-top:12px;">Đóng</button>
+                        </div>
+                    </div>
+                `;
+            }, 1500);
+        }
+
+        // ============================================================
+        // 13. PROCESS PAYMENT (Card)
         // ============================================================
         function processPayment() {
             const payBtn = document.getElementById('payBtn');
@@ -1829,7 +2131,7 @@
         }
 
         // ============================================================
-        // 13. HISTORY
+        // 14. HISTORY
         // ============================================================
         function renderHistory() {
             const container = document.getElementById('historyList');
@@ -1843,7 +2145,7 @@
         }
 
         // ============================================================
-        // 14. REVIEWS
+        // 15. REVIEWS
         // ============================================================
         function renderReviews() {
             const container = document.getElementById('reviewRow');
@@ -1857,7 +2159,7 @@
         }
 
         // ============================================================
-        // 15. TICKER
+        // 16. TICKER
         // ============================================================
         function startTicker() {
             setInterval(() => {
@@ -1873,7 +2175,7 @@
         }
 
         // ============================================================
-        // 16. MODAL CLOSE ON OUTSIDE CLICK
+        // 17. MODAL CLOSE ON OUTSIDE CLICK
         // ============================================================
         document.querySelectorAll('.modal-overlay').forEach(modal => {
             modal.addEventListener('click', function(e) {
@@ -1884,7 +2186,7 @@
         });
 
         // ============================================================
-        // 17. KEYBOARD SHORTCUT: Enter to confirm
+        // 18. KEYBOARD SHORTCUT: Enter to confirm
         // ============================================================
         document.getElementById('usernameInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') confirmUser();
@@ -1893,6 +2195,7 @@
         console.log('✅ OG SHOP PREMIUM V4 loaded successfully');
         console.log('🔒 Security: No sensitive data exposed in client');
         console.log('🌐 Roblox API: Real user verification enabled');
+        console.log('💳 ZaloPay: Payment method added');
     </script>
 </body>
 </html>
