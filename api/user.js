@@ -1,141 +1,68 @@
-// ============================================================
-// CHECK ROBLOX USER - VIA PROXY (/api/user)
-// ============================================================
-async function checkRobloxUser() {
-    const usernameInput = document.getElementById('usernameInput');
-    const username = usernameInput.value.trim();
+export default async function handler(req, res) {
+    // CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    if (!username) {
-        showToast('⚠️ Vui lòng nhập username Roblox', 'error');
-        return;
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
     }
 
-    const btn = document.getElementById('confirmBtn');
-    btn.disabled = true;
-    const loadingBar = document.getElementById('loadingBar');
-    const loadFill = document.getElementById('loadFill');
-    const loadText = document.getElementById('loadText');
+    const { username } = req.query;
 
-    loadingBar.classList.add('show');
-    loadFill.style.width = '0%';
-    loadText.textContent = '🔍 Đang kiểm tra Roblox User...';
-
-    let progress = 0;
-    const progressInterval = setInterval(() => {
-        progress += Math.random() * 10 + 5;
-        if (progress > 90) progress = 90;
-        loadFill.style.width = progress + '%';
-    }, 150);
+    if (!username) {
+        return res.status(400).json({ error: 'Thiếu username' });
+    }
 
     try {
-        // Gọi API với username (không phân biệt hoa thường)
-        const res = await fetch(`/api/user?username=${encodeURIComponent(username)}`);
+        // Gọi Roblox API search - KHÔNG phân biệt hoa thường
+        const response = await fetch(
+            `https://users.roblox.com/v1/users/search?keyword=${encodeURIComponent(username)}&limit=10`
+        );
 
-        if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.error || 'Không tìm thấy user');
+        const data = await response.json();
+
+        if (!data.data || data.data.length === 0) {
+            return res.status(404).json({ error: 'Không tìm thấy user' });
         }
 
-        const user = await res.json();
+        // Tìm user trùng khớp KHÔNG phân biệt hoa thường
+        const user = data.data.find(
+            u => u.name.toLowerCase() === username.toLowerCase()
+        );
 
-        clearInterval(progressInterval);
-        loadFill.style.width = '100%';
+        if (!user) {
+            return res.status(404).json({ error: 'Không tìm thấy user chính xác' });
+        }
 
-        const userData = {
+        // Lấy thêm thông tin chi tiết
+        const detailRes = await fetch(`https://users.roblox.com/v1/users/${user.id}`);
+        const detail = await detailRes.json();
+
+        // Lấy avatar
+        let avatarUrl = null;
+        try {
+            const avatarRes = await fetch(
+                `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${user.id}&size=150x150&format=Png`
+            );
+            const avatarData = await avatarRes.json();
+            if (avatarData.data && avatarData.data.length > 0) {
+                avatarUrl = avatarData.data[0].imageUrl;
+            }
+        } catch (e) {
+            console.error('Avatar fetch error:', e);
+        }
+
+        return res.json({
             id: user.id,
-            username: user.name,
-            displayName: user.displayName || user.name,
-            created: user.created || new Date().toISOString(),
-            avatar: user.avatar || null
-        };
-
-        // Hiển thị lên giao diện
-        document.getElementById('userNameDisplay').textContent = userData.displayName;
-        document.getElementById('userIdDisplay').textContent = 'ID: ' + userData.id;
-        document.getElementById('userCreatedDisplay').textContent = 
-            'Tham gia: ' + new Date(userData.created).toLocaleDateString('vi-VN');
-
-        // Hiển thị avatar
-        const avatarEl = document.getElementById('userAvatar');
-        if (userData.avatar) {
-            const img = document.createElement('img');
-            img.src = userData.avatar;
-            img.onerror = () => {
-                avatarEl.textContent = userData.displayName.charAt(0).toUpperCase();
-                avatarEl.style.background = 'linear-gradient(135deg, #ffb700, #f57c00)';
-                avatarEl.style.display = 'flex';
-                avatarEl.style.alignItems = 'center';
-                avatarEl.style.justifyContent = 'center';
-            };
-            img.onload = () => {
-                avatarEl.innerHTML = '';
-                avatarEl.appendChild(img);
-                avatarEl.style.background = 'none';
-                avatarEl.style.display = 'block';
-            };
-            avatarEl.innerHTML = '';
-            avatarEl.appendChild(img);
-        } else {
-            avatarEl.textContent = userData.displayName.charAt(0).toUpperCase();
-            avatarEl.style.background = 'linear-gradient(135deg, #ffb700, #f57c00)';
-            avatarEl.style.display = 'flex';
-            avatarEl.style.alignItems = 'center';
-            avatarEl.style.justifyContent = 'center';
-        }
-
-        currentUser = userData;
-        verifiedUserData = userData;
-        isVerified = true;
-
-        loadText.textContent = '✅ Tìm thấy Roblox User!';
-
-        document.getElementById('userCard').classList.add('show');
-
-        const statusBox = document.getElementById('userStatusBox');
-        statusBox.classList.add('show');
-        document.getElementById('statusUsername').textContent = userData.displayName;
-        document.getElementById('statusUserId').textContent = 'ID: ' + userData.id;
-        const badge = document.getElementById('statusBadge');
-        badge.className = 'status-badge success';
-        badge.textContent = '✅ Tìm thấy tài khoản';
-
-        const statusAvatar = document.getElementById('statusAvatarImg');
-        if (userData.avatar) {
-            statusAvatar.src = userData.avatar;
-        } else {
-            statusAvatar.src = '';
-        }
-
-        setTimeout(() => {
-            loadingBar.classList.remove('show');
-            btn.disabled = false;
-            showToast('✅ Tìm thấy: ' + userData.displayName, 'success');
-            updateCartUI();
-            updateZaloAmount();
-        }, 400);
+            name: user.name,
+            displayName: detail.displayName || user.name,
+            created: detail.created,
+            avatar: avatarUrl
+        });
 
     } catch (error) {
-        console.error('Error:', error);
-        clearInterval(progressInterval);
-        loadFill.style.width = '100%';
-        loadText.textContent = '❌ ' + (error.message || 'Không tìm thấy user!');
-        showToast('❌ ' + (error.message || 'Không tìm thấy Roblox User!'), 'error');
-        isVerified = false;
-        verifiedUserData = null;
-
-        document.getElementById('userCard').classList.remove('show');
-
-        const statusBox = document.getElementById('userStatusBox');
-        statusBox.classList.add('show');
-        document.getElementById('statusUsername').textContent = username;
-        document.getElementById('statusUserId').textContent = 'ID: Không tìm thấy';
-        const badge = document.getElementById('statusBadge');
-        badge.className = 'status-badge error';
-        badge.textContent = '❌ Không tìm thấy tài khoản';
-
-        setTimeout(() => {
-            loadingBar.classList.remove('show');
-            btn.disabled = false;
-        }, 1500);
+        console.error('Proxy error:', error);
+        return res.status(500).json({ error: 'Lỗi server' });
     }
 }
