@@ -71,6 +71,34 @@
             100% { transform: translateY(-10vh) scale(1); opacity: 0; }
         }
 
+        /* ===== TICKER (MARQUEE) ===== */
+        .ticker {
+            overflow: hidden;
+            white-space: nowrap;
+            background: #14141e;
+            margin: 0 16px 16px;
+            border-radius: 16px;
+            padding: 10px 14px;
+            border: 0.5px solid rgba(255, 215, 0, 0.05);
+        }
+
+        .ticker-content {
+            display: inline-block;
+            animation: tickerMove 20s linear infinite;
+            color: #ffd700;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        @keyframes tickerMove {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(-100%);
+            }
+        }
+
         /* ===== APP HEADER ===== */
         .app-header {
             display: flex;
@@ -1041,12 +1069,14 @@
         </div>
     </header>
 
-    <!-- ===== TICKER ===== -->
-    <div class="ticker" id="tickerContainer">
+    <!-- ===== TICKER (MARQUEE) ===== -->
+    <div class="ticker">
         <div class="ticker-content" id="tickerContent">
             🎉 User 8272**** vừa nhận 145 Robux &nbsp;·&nbsp;
             🎉 User 9217**** vừa nhận 300 Robux &nbsp;·&nbsp;
-            🎉 User 6734**** vừa nhận 500 Robux
+            🎉 User 6734**** vừa nhận 500 Robux &nbsp;·&nbsp;
+            🎉 User 5831**** vừa nhận 800 Robux &nbsp;·&nbsp;
+            🎉 User 7462**** vừa nhận 1700 Robux
         </div>
     </div>
 
@@ -1273,14 +1303,56 @@
         }
 
         // ============================================================
-        // 7. USER - Roblox API (simulated)
+        // 7. USER - Roblox API REAL
         // ============================================================
+        async function checkRobloxUser(username) {
+            try {
+                const res = await fetch(
+                    "https://users.roblox.com/v1/usernames/users", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            usernames: [username],
+                            excludeBannedUsers: true
+                        })
+                    }
+                );
+
+                const data = await res.json();
+
+                if (!data.data || data.data.length === 0) {
+                    return null;
+                }
+
+                const user = data.data[0];
+
+                const detail = await fetch(
+                    `https://users.roblox.com/v1/users/${user.id}`
+                );
+
+                const info = await detail.json();
+
+                return {
+                    username: info.name,
+                    displayName: info.displayName,
+                    id: info.id,
+                    created: info.created
+                };
+            } catch (error) {
+                console.error('Roblox API error:', error);
+                return null;
+            }
+        }
+
         function loadSavedUser() {
             const saved = localStorage.getItem('ogshop_user');
             if (saved) {
                 try {
                     const data = JSON.parse(saved);
                     currentUser = data;
+                    isVerified = true;
                     showUserCard(data);
                 } catch (e) {}
             }
@@ -1306,44 +1378,46 @@
 
             loadingBar.classList.add('show');
             loadFill.style.width = '0%';
+            loadText.textContent = '🔍 Đang tìm Roblox User...';
 
-            // Simulate API call with progress
-            const steps = [
-                { p: 20, text: '🔍 Đang tìm Roblox User...' },
-                { p: 50, text: '📡 Đang kết nối Roblox API...' },
-                { p: 80, text: '✅ Đã tìm thấy user, đang xử lý...' },
-                { p: 100, text: '✅ Hoàn tất!' },
-            ];
+            // Simulate progress while waiting for API
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 15 + 5;
+                if (progress > 90) progress = 90;
+                loadFill.style.width = progress + '%';
+            }, 200);
 
-            for (const step of steps) {
-                await sleep(400 + Math.random() * 400);
-                loadFill.style.width = step.p + '%';
-                loadText.textContent = step.text;
+            const userData = await checkRobloxUser(name);
+
+            clearInterval(progressInterval);
+
+            if (!userData) {
+                loadFill.style.width = '100%';
+                loadText.textContent = '❌ Không tìm thấy Roblox User!';
+                showToast('❌ Không tìm thấy Roblox User!', 'error');
+                setTimeout(() => {
+                    loadingBar.classList.remove('show');
+                    btn.disabled = false;
+                }, 1500);
+                return;
             }
 
-            // Simulate user data from Roblox API
-            const userData = {
-                username: name,
-                displayName: name.charAt(0).toUpperCase() + name.slice(1),
-                id: Math.floor(100000000 + Math.random() * 900000000),
-                created: new Date(Date.now() - Math.random() * 5 * 365 * 24 * 60 * 60 * 1000),
-                avatar: null,
-            };
+            loadFill.style.width = '100%';
+            loadText.textContent = '✅ Hoàn tất!';
 
             currentUser = userData;
             saveUser(userData);
+            isVerified = true;
 
             setTimeout(() => {
                 loadingBar.classList.remove('show');
                 btn.disabled = false;
-                isVerified = true;
                 showUserCard(userData);
                 showToast('✅ Đã xác nhận: ' + userData.displayName, 'success');
                 updateCartUI();
             }, 400);
         }
-
-        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
         function showUserCard(user) {
             const card = document.getElementById('userCard');
@@ -1355,11 +1429,15 @@
             img.onerror = () => {
                 avatar.textContent = user.displayName.charAt(0).toUpperCase();
                 avatar.style.background = 'linear-gradient(135deg, #ffb700, #f57c00)';
+                avatar.style.display = 'flex';
+                avatar.style.alignItems = 'center';
+                avatar.style.justifyContent = 'center';
             };
             img.onload = () => {
                 avatar.innerHTML = '';
                 avatar.appendChild(img);
                 avatar.style.background = 'none';
+                avatar.style.display = 'block';
             };
             avatar.innerHTML = '';
             avatar.appendChild(img);
@@ -1814,6 +1892,7 @@
 
         console.log('✅ OG SHOP PREMIUM V4 loaded successfully');
         console.log('🔒 Security: No sensitive data exposed in client');
+        console.log('🌐 Roblox API: Real user verification enabled');
     </script>
 </body>
 </html>
