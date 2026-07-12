@@ -1352,11 +1352,11 @@
     <!-- ===== USER CARD ===== -->
     <div class="user-card" id="userCard">
         <div class="user-top">
-            <div class="user-avatar" id="userAvatar">T</div>
+            <div class="user-avatar" id="userAvatar"></div>
             <div class="user-info">
-                <h4 id="userNameDisplay">TuanPro</h4>
-                <div class="user-id" id="userIdDisplay">ID: 123456789</div>
-                <div class="user-created" id="userCreatedDisplay">Tham gia: 01/01/2020</div>
+                <h4 id="userNameDisplay"></h4>
+                <div class="user-id" id="userIdDisplay"></div>
+                <div class="user-created" id="userCreatedDisplay"></div>
             </div>
             <div class="user-status">Online</div>
         </div>
@@ -1369,13 +1369,6 @@
         <span class="view-all">Xem tất cả →</span>
     </div>
     <div class="product-scroll" id="productScroll"></div>
-
-    <!-- ===== HISTORY ===== -->
-    <div class="section-header" style="padding-top:4px;">
-        <h3>📜 Giao dịch gần đây</h3>
-        <span class="view-all">Xem thêm</span>
-    </div>
-    <div class="history-list" id="historyList"></div>
 
     <!-- ===== REVIEW ===== -->
     <div class="section-header" style="padding-top:4px;">
@@ -1484,12 +1477,6 @@
             { stars: 4, comment: 'Ổn định, hỗ trợ tốt', user: 'Zombie**' },
         ];
 
-        const HISTORY_DATA = [
-            { user: '8272****', pack: '145 Robux', status: 'completed' },
-            { user: '9217****', pack: '300 Robux', status: 'pending' },
-            { user: '6734****', pack: '500 Robux', status: 'completed' },
-        ];
-
         const TICKER_USERS = ['8272****', '9217****', '6734****', '5831****', '7462****'];
         const TICKER_PACKS = ['145 Robux', '300 Robux', '500 Robux', '800 Robux', '1700 Robux'];
 
@@ -1507,12 +1494,11 @@
         document.addEventListener('DOMContentLoaded', () => {
             renderProducts();
             renderReviews();
-            renderHistory();
             createParticles();
-            loadSavedUser();
             startTicker();
             updateCartUI();
             updateZaloAmount();
+            // Không load user mặc định - bắt buộc nhập tên
         });
 
         // ============================================================
@@ -1566,7 +1552,7 @@
         }
 
         // ============================================================
-        // 7. CHECK ROBLOX USER - VIA PROXY
+        // 7. CHECK ROBLOX USER - VIA PROXY (/api/user)
         // ============================================================
         async function checkRobloxUser() {
             const usernameInput = document.getElementById('usernameInput');
@@ -1595,8 +1581,7 @@
             }, 150);
 
             try {
-                // Gọi proxy API thay vì gọi trực tiếp Roblox
-                const res = await fetch('/api/check?username=' + encodeURIComponent(username));
+                const res = await fetch(`/api/user?username=${encodeURIComponent(username)}`);
 
                 if (!res.ok) {
                     const errorData = await res.json();
@@ -1609,25 +1594,73 @@
                 loadFill.style.width = '100%';
 
                 const userData = {
+                    id: user.id,
                     username: user.name,
                     displayName: user.displayName || user.name,
-                    id: user.id,
                     created: user.created || new Date().toISOString(),
-                    avatar: user.avatar
+                    avatar: user.avatar || null
                 };
+
+                // Hiển thị lên giao diện
+                document.getElementById('userNameDisplay').textContent = userData.displayName;
+                document.getElementById('userIdDisplay').textContent = 'ID: ' + userData.id;
+                document.getElementById('userCreatedDisplay').textContent = 
+                    'Tham gia: ' + new Date(userData.created).toLocaleDateString('vi-VN');
+
+                // Hiển thị avatar
+                const avatarEl = document.getElementById('userAvatar');
+                if (userData.avatar) {
+                    const img = document.createElement('img');
+                    img.src = userData.avatar;
+                    img.onerror = () => {
+                        avatarEl.textContent = userData.displayName.charAt(0).toUpperCase();
+                        avatarEl.style.background = 'linear-gradient(135deg, #ffb700, #f57c00)';
+                        avatarEl.style.display = 'flex';
+                        avatarEl.style.alignItems = 'center';
+                        avatarEl.style.justifyContent = 'center';
+                    };
+                    img.onload = () => {
+                        avatarEl.innerHTML = '';
+                        avatarEl.appendChild(img);
+                        avatarEl.style.background = 'none';
+                        avatarEl.style.display = 'block';
+                    };
+                    avatarEl.innerHTML = '';
+                    avatarEl.appendChild(img);
+                } else {
+                    avatarEl.textContent = userData.displayName.charAt(0).toUpperCase();
+                    avatarEl.style.background = 'linear-gradient(135deg, #ffb700, #f57c00)';
+                    avatarEl.style.display = 'flex';
+                    avatarEl.style.alignItems = 'center';
+                    avatarEl.style.justifyContent = 'center';
+                }
 
                 currentUser = userData;
                 verifiedUserData = userData;
                 isVerified = true;
-                saveUser(userData);
 
                 loadText.textContent = '✅ Tìm thấy Roblox User!';
+
+                document.getElementById('userCard').classList.add('show');
+
+                const statusBox = document.getElementById('userStatusBox');
+                statusBox.classList.add('show');
+                document.getElementById('statusUsername').textContent = userData.displayName;
+                document.getElementById('statusUserId').textContent = 'ID: ' + userData.id;
+                const badge = document.getElementById('statusBadge');
+                badge.className = 'status-badge success';
+                badge.textContent = '✅ Tìm thấy tài khoản';
+
+                const statusAvatar = document.getElementById('statusAvatarImg');
+                if (userData.avatar) {
+                    statusAvatar.src = userData.avatar;
+                } else {
+                    statusAvatar.src = '';
+                }
 
                 setTimeout(() => {
                     loadingBar.classList.remove('show');
                     btn.disabled = false;
-                    showUserCard(userData);
-                    showUserStatus(userData, true);
                     showToast('✅ Tìm thấy: ' + userData.displayName, 'success');
                     updateCartUI();
                     updateZaloAmount();
@@ -1642,8 +1675,15 @@
                 isVerified = false;
                 verifiedUserData = null;
 
-                const fakeUser = { username: username, displayName: username, id: 'Không tìm thấy' };
-                showUserStatus(fakeUser, false);
+                document.getElementById('userCard').classList.remove('show');
+
+                const statusBox = document.getElementById('userStatusBox');
+                statusBox.classList.add('show');
+                document.getElementById('statusUsername').textContent = username;
+                document.getElementById('statusUserId').textContent = 'ID: Không tìm thấy';
+                const badge = document.getElementById('statusBadge');
+                badge.className = 'status-badge error';
+                badge.textContent = '❌ Không tìm thấy tài khoản';
 
                 setTimeout(() => {
                     loadingBar.classList.remove('show');
@@ -1653,90 +1693,7 @@
         }
 
         // ============================================================
-        // 8. USER MANAGEMENT
-        // ============================================================
-        function loadSavedUser() {
-            const saved = localStorage.getItem('ogshop_user');
-            if (saved) {
-                try {
-                    const data = JSON.parse(saved);
-                    currentUser = data;
-                    verifiedUserData = data;
-                    isVerified = true;
-                    showUserCard(data);
-                    showUserStatus(data, true);
-                    updateZaloAmount();
-                } catch (e) {}
-            }
-        }
-
-        function saveUser(user) {
-            localStorage.setItem('ogshop_user', JSON.stringify(user));
-        }
-
-        function showUserStatus(user, success) {
-            const box = document.getElementById('userStatusBox');
-            box.classList.add('show');
-
-            const avatarImg = document.getElementById('statusAvatarImg');
-            if (user.avatar) {
-                avatarImg.src = user.avatar;
-            } else {
-                avatarImg.src = '';
-            }
-
-            document.getElementById('statusUsername').textContent = user.displayName || user.username;
-            document.getElementById('statusUserId').textContent = 'ID: ' + user.id;
-
-            const badge = document.getElementById('statusBadge');
-            if (success) {
-                badge.className = 'status-badge success';
-                badge.textContent = '✅ Tìm thấy tài khoản';
-            } else {
-                badge.className = 'status-badge error';
-                badge.textContent = '❌ Không tìm thấy tài khoản';
-            }
-        }
-
-        function showUserCard(user) {
-            const card = document.getElementById('userCard');
-            card.classList.add('show');
-
-            const avatar = document.getElementById('userAvatar');
-            if (user.avatar) {
-                const img = document.createElement('img');
-                img.src = user.avatar;
-                img.onerror = () => {
-                    avatar.textContent = user.displayName.charAt(0).toUpperCase();
-                    avatar.style.background = 'linear-gradient(135deg, #ffb700, #f57c00)';
-                    avatar.style.display = 'flex';
-                    avatar.style.alignItems = 'center';
-                    avatar.style.justifyContent = 'center';
-                };
-                img.onload = () => {
-                    avatar.innerHTML = '';
-                    avatar.appendChild(img);
-                    avatar.style.background = 'none';
-                    avatar.style.display = 'block';
-                };
-                avatar.innerHTML = '';
-                avatar.appendChild(img);
-            } else {
-                avatar.textContent = user.displayName.charAt(0).toUpperCase();
-                avatar.style.background = 'linear-gradient(135deg, #ffb700, #f57c00)';
-                avatar.style.display = 'flex';
-                avatar.style.alignItems = 'center';
-                avatar.style.justifyContent = 'center';
-            }
-
-            document.getElementById('userNameDisplay').textContent = user.displayName || user.username;
-            document.getElementById('userIdDisplay').textContent = 'ID: ' + user.id;
-            document.getElementById('userCreatedDisplay').textContent =
-                'Tham gia: ' + (user.created ? new Date(user.created).toLocaleDateString('vi-VN') : 'N/A');
-        }
-
-        // ============================================================
-        // 9. PRODUCTS
+        // 8. PRODUCTS
         // ============================================================
         function renderProducts() {
             const container = document.getElementById('productScroll');
@@ -1760,7 +1717,7 @@
         }
 
         // ============================================================
-        // 10. CART
+        // 9. CART
         // ============================================================
         function addToCart(productId) {
             if (!isVerified || !verifiedUserData) {
@@ -1870,7 +1827,7 @@
         }
 
         // ============================================================
-        // 11. CHECKOUT
+        // 10. CHECKOUT
         // ============================================================
         function checkout() {
             if (!isVerified || !verifiedUserData) {
@@ -1891,7 +1848,7 @@
         }
 
         // ============================================================
-        // 12. PAYMENT - CARD VALIDATION
+        // 11. PAYMENT
         // ============================================================
         let selectedCard = 'viettel';
 
@@ -1917,7 +1874,6 @@
                             </div>
                         </div>
 
-                        <!-- ZaloPay Card trong modal -->
                         <div class="zalo-pay-card" style="background:linear-gradient(145deg,#1a1a2e,#0f0f1a);border-radius:20px;padding:18px 20px;margin:12px 0 16px 0;border:0.5px solid rgba(255,215,0,0.06);display:flex;align-items:center;gap:16px;">
                             <div style="width:56px;height:56px;border-radius:16px;overflow:hidden;flex-shrink:0;background:#fff;display:flex;align-items:center;justify-content:center;padding:8px;">
                                 <img src="images.png" style="width:100%;height:100%;object-fit:contain;">
@@ -2075,7 +2031,7 @@
         });
 
         // ============================================================
-        // 13. ZALOPAY PAYMENT
+        // 12. ZALOPAY PAYMENT
         // ============================================================
         function processZaloPay() {
             if (!isVerified || !verifiedUserData) {
@@ -2112,6 +2068,9 @@
                             <div class="step-desc" style="margin-top:12px;">
                                 <p>Bạn đã mua <strong style="color:#ffb700;">${totalRobux} Robux</strong></p>
                                 <p>Thanh toán: <strong style="color:#ffb700;">${formatPrice(total)}</strong></p>
+                                <p style="font-size:14px;color:#ffb700;font-weight:600;margin-top:12px;padding:12px;background:rgba(255,183,0,0.08);border-radius:12px;border:1px solid rgba(255,183,0,0.15);">
+                                    ⏳ Robux sẽ về tài khoản trong vòng 120h tới
+                                </p>
                                 <p style="font-size:12px;color:#666;margin-top:8px;">Mã giao dịch: #${Math.floor(100000 + Math.random()*900000)}</p>
                                 <p style="font-size:12px;color:#00aaff;margin-top:4px;">💳 Thanh toán qua ZaloPay</p>
                             </div>
@@ -2148,7 +2107,7 @@
         }
 
         // ============================================================
-        // 14. PROCESS PAYMENT (Card)
+        // 13. PROCESS PAYMENT (Card)
         // ============================================================
         function processPayment() {
             const payBtn = document.getElementById('payBtn');
@@ -2188,6 +2147,9 @@
                                 <div class="step-desc" style="margin-top:12px;">
                                     <p>Bạn đã mua <strong style="color:#ffb700;">${totalRobux} Robux</strong></p>
                                     <p>Thanh toán: <strong style="color:#ffb700;">${formatPrice(total)}</strong></p>
+                                    <p style="font-size:14px;color:#ffb700;font-weight:600;margin-top:12px;padding:12px;background:rgba(255,183,0,0.08);border-radius:12px;border:1px solid rgba(255,183,0,0.15);">
+                                        ⏳ Robux sẽ về tài khoản trong vòng 120h tới
+                                    </p>
                                     <p style="font-size:12px;color:#666;margin-top:8px;">Mã giao dịch: #${Math.floor(100000 + Math.random()*900000)}</p>
                                 </div>
                                 <button class="btn-checkout" onclick="closeModal('paymentModal');cart=[];updateCartUI();updateZaloAmount();showToast('✅ Giao dịch hoàn tất!','success');" style="margin-top:12px;">Đóng</button>
@@ -2201,21 +2163,7 @@
         }
 
         // ============================================================
-        // 15. HISTORY
-        // ============================================================
-        function renderHistory() {
-            const container = document.getElementById('historyList');
-            container.innerHTML = HISTORY_DATA.map(h => `
-                <div class="history-item" style="background:#14141e;border-radius:16px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:0.5px solid rgba(255,255,255,0.02);">
-                    <span class="h-user" style="font-weight:600;font-size:14px;">👤 ${h.user}</span>
-                    <span class="h-pack" style="color:#ffb700;font-weight:700;">${h.pack}</span>
-                    <span class="h-status ${h.status}" style="font-size:12px;padding:2px 12px;border-radius:30px;font-weight:600;background:${h.status === 'completed' ? 'rgba(76,175,80,0.15)' : 'rgba(255,183,0,0.15)'};color:${h.status === 'completed' ? '#4caf50' : '#ffb700'};">${h.status === 'completed' ? '✅ Hoàn tất' : '⏳ Đang xử lý'}</span>
-                </div>
-            `).join('');
-        }
-
-        // ============================================================
-        // 16. REVIEWS
+        // 14. REVIEWS
         // ============================================================
         function renderReviews() {
             const container = document.getElementById('reviewRow');
@@ -2229,7 +2177,7 @@
         }
 
         // ============================================================
-        // 17. TICKER
+        // 15. TICKER
         // ============================================================
         function startTicker() {
             setInterval(() => {
@@ -2245,7 +2193,7 @@
         }
 
         // ============================================================
-        // 18. MODAL CLOSE ON OUTSIDE CLICK
+        // 16. MODAL CLOSE ON OUTSIDE CLICK
         // ============================================================
         document.querySelectorAll('.modal-overlay').forEach(modal => {
             modal.addEventListener('click', function(e) {
@@ -2256,7 +2204,7 @@
         });
 
         // ============================================================
-        // 19. KEYBOARD SHORTCUT: Enter to confirm
+        // 17. KEYBOARD SHORTCUT: Enter to confirm
         // ============================================================
         document.getElementById('usernameInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') checkRobloxUser();
@@ -2265,6 +2213,7 @@
         console.log('✅ OG SHOP PREMIUM V4 loaded successfully');
         console.log('🔒 Security: Proxy API used for Roblox verification');
         console.log('💳 ZaloPay: Payment method integrated');
+        console.log('📦 120h delivery notice added');
     </script>
 </body>
-    </html>
+</html>
